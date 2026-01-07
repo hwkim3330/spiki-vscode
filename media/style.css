@@ -1,0 +1,400 @@
+/* Spiki VSCode Extension Styles */
+:root {
+    --bg-primary: var(--vscode-editor-background);
+    --bg-secondary: var(--vscode-sideBar-background);
+    --text-primary: var(--vscode-editor-foreground);
+    --text-secondary: var(--vscode-descriptionForeground);
+    --accent: var(--vscode-focusBorder);
+    --border: var(--vscode-panel-border);
+    --button-bg: var(--vscode-button-background);
+    --button-fg: var(--vscode-button-foreground);
+    --button-hover: var(--vscode-button-hoverBackground);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    overflow-x: hidden;
+    user-select: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px;
+    gap: 10px;
+}
+
+/* Stats */
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-label {
+    width: 45px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.stat-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--vscode-progressBar-background, rgba(255,255,255,0.1));
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.stat-fill.happiness {
+    background: linear-gradient(90deg, #ff6b9d, #ff8fab);
+}
+
+.stat-fill.hunger {
+    background: linear-gradient(90deg, #ffa94d, #ffc078);
+}
+
+.stat-fill.energy {
+    background: linear-gradient(90deg, #69db7c, #8ce99a);
+}
+
+.stat-fill.low {
+    animation: pulse-bar 1s ease-in-out infinite;
+}
+
+@keyframes pulse-bar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.stat-value {
+    width: 28px;
+    font-size: 10px;
+    text-align: right;
+    color: var(--text-secondary);
+}
+
+/* Level Bar */
+.level-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.level-badge {
+    background: linear-gradient(135deg, #ffd43b, #fab005);
+    color: #1a1a2e;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.spiki-count {
+    background: linear-gradient(135deg, #845ef7, #be4bdb);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.exp-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.exp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #845ef7, #be4bdb);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.exp-text {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* Character Area */
+.character-area {
+    flex: 1;
+    position: relative;
+    min-height: 200px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--vscode-textBlockQuote-background, rgba(255,255,255,0.03));
+}
+
+/* 스피키 개체 */
+.spiki-creature {
+    position: absolute;
+    cursor: pointer;
+    z-index: 5;
+    will-change: transform, left, top;
+}
+
+.spiki-creature img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    /* 픽셀 선명하게 유지 */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    transition: opacity 0.2s ease;
+}
+
+.mini-spiki img {
+    width: 100px;
+    height: 100px;
+}
+
+.main-spiki {
+    z-index: 10;
+}
+
+/* 이름표 */
+.spiki-name {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--text-secondary);
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* 말풍선 */
+.speech-bubble {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px) scale(0.9);
+    background: var(--vscode-notifications-background, rgba(50, 50, 60, 0.95));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 12px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+    max-width: 90%;
+    text-align: center;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: var(--vscode-notifications-background, rgba(50, 50, 60, 0.95));
+    border-bottom: 0;
+}
+
+.speech-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* 미니 말풍선 */
+.mini-speech {
+    position: absolute;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(50, 50, 60, 0.9);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 10px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 50;
+    white-space: nowrap;
+}
+
+.mini-speech.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 애니메이션 */
+.spiki-creature.walking img {
+    animation: walk 0.3s ease-in-out infinite;
+}
+
+@keyframes walk {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-3px) rotate(-3deg); }
+    75% { transform: translateY(-3px) rotate(3deg); }
+}
+
+.spiki-creature.bouncing img {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-15px); }
+    50% { transform: translateY(-5px); }
+    75% { transform: translateY(-10px); }
+}
+
+.spiki-creature.jumping img {
+    animation: jump 0.8s ease;
+}
+
+@keyframes jump {
+    0% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-25px) rotate(-5deg); }
+    50% { transform: translateY(-30px) rotate(5deg); }
+    75% { transform: translateY(-12px) rotate(-3deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+}
+
+.spiki-creature.wiggling img {
+    animation: wiggle 0.5s ease;
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+    75% { transform: rotate(-5deg); }
+}
+
+.spiki-creature.sleeping img {
+    animation: sleep 2s ease-in-out infinite;
+    filter: brightness(0.7);
+}
+
+@keyframes sleep {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(3px) rotate(3deg); }
+}
+
+/* Effects */
+.effects {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 20;
+}
+
+.effect-item {
+    position: absolute;
+    font-size: 18px;
+    animation: float-up 1.5s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.5);
+    }
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: var(--vscode-button-secondaryBackground, rgba(255,255,255,0.1));
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background: var(--vscode-button-secondaryHoverBackground, rgba(255,255,255,0.15));
+    transform: translateY(-2px);
+}
+
+.action-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.action-btn.multiply-btn {
+    background: linear-gradient(135deg, #845ef7, #be4bdb);
+}
+
+.action-btn.multiply-btn:hover {
+    background: linear-gradient(135deg, #9775fa, #cc5de8);
+}
+
+/* Coding Tip */
+.coding-tip {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-secondary);
+    padding: 6px;
+    background: var(--vscode-textBlockQuote-background, rgba(255,255,255,0.05));
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--vscode-scrollbarSlider-background);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--vscode-scrollbarSlider-hoverBackground);
+}

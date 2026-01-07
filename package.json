@@ -1,0 +1,100 @@
+{
+  "name": "spiki-tamagotchi",
+  "displayName": "Spiki Tamagotchi",
+  "description": "귀여운 스피키와 함께 코딩하세요! 코딩할수록 스피키가 행복해져요 🐾",
+  "version": "1.0.0",
+  "publisher": "hwkim3330",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "tamagotchi",
+    "pet",
+    "productivity",
+    "fun",
+    "companion"
+  ],
+  "icon": "media/images/spiki1.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "spiki.show",
+        "title": "Spiki: Show Spiki",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "spiki.feed",
+        "title": "Spiki: Feed Spiki"
+      },
+      {
+        "command": "spiki.play",
+        "title": "Spiki: Play with Spiki"
+      },
+      {
+        "command": "spiki.pet",
+        "title": "Spiki: Pet Spiki"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "spiki-container",
+          "title": "Spiki",
+          "icon": "media/images/spiki-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "spiki-container": [
+        {
+          "type": "webview",
+          "id": "spiki.panel",
+          "name": "Spiki"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Spiki Tamagotchi",
+      "properties": {
+        "spiki.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Spiki status in the status bar"
+        },
+        "spiki.soundEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable sound effects"
+        },
+        "spiki.autoFeed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reward Spiki for coding activity"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwkim3330/spiki-vscode"
+  }
+}
