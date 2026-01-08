@@ -155,7 +155,7 @@ class SpikiViewProvider {
                 <button class="preset-btn" data-video="rUxyKA_-grg">Piano</button>
             </div>
             <div class="youtube-input">
-                <input type="text" id="youtube-url" placeholder="YouTube URL or ID">
+                <input type="text" id="youtube-url" placeholder="YouTube/Shorts URL 붙여넣기">
                 <button id="play-youtube">▶</button>
             </div>
             <div class="youtube-player" id="youtube-container"></div>

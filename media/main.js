@@ -490,20 +490,41 @@
 
         // URL에서 video ID 추출
         let videoId = value;
-        if (value.includes('youtube.com') || value.includes('youtu.be')) {
+        let isShorts = false;
+
+        if (value.includes('youtube.com/shorts/')) {
+            // Shorts URL
+            const match = value.match(/youtube\.com\/shorts\/([^?&\s]+)/);
+            if (match) {
+                videoId = match[1];
+                isShorts = true;
+            }
+        } else if (value.includes('youtube.com') || value.includes('youtu.be')) {
             const match = value.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
             if (match) videoId = match[1];
         }
-        playYouTube(videoId);
+
+        playYouTube(videoId, isShorts);
     }
 
-    function playYouTube(videoId) {
+    function playYouTube(videoId, isShorts = false) {
         const container = document.getElementById('youtube-container');
         if (!container) return;
 
+        // Shorts면 세로 비율
+        if (isShorts) {
+            container.style.aspectRatio = '9/16';
+            container.style.maxHeight = '300px';
+            container.style.margin = '0 auto';
+        } else {
+            container.style.aspectRatio = '16/9';
+            container.style.maxHeight = '';
+            container.style.margin = '';
+        }
+
         // iframe 생성
         container.innerHTML = `<iframe
-            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1"
+            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}"
             allow="autoplay; encrypted-media"
             allowfullscreen>
         </iframe>`;
