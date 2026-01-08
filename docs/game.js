@@ -29,16 +29,30 @@
     const SOUNDS = {};
     const SOUND_FILES = ['happy', 'happy2', 'tap', 'spiki', 'sad', 'surprise', 'dont', 'drag', 'play', 'tired'];
     let soundEnabled = true;
+    let audioUnlocked = false;
 
     function initAudio() {
         try {
             SOUND_FILES.forEach(name => {
                 SOUNDS[name] = new Audio(`${name}.wav`);
-                SOUNDS[name].volume = 0.5;
+                SOUNDS[name].volume = 0.3;
+                SOUNDS[name].preload = 'auto';
             });
         } catch (e) {
             console.log('Audio init failed:', e);
         }
+    }
+
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        // 첫 클릭 시 오디오 컨텍스트 활성화
+        Object.values(SOUNDS).forEach(sound => {
+            sound.play().then(() => {
+                sound.pause();
+                sound.currentTime = 0;
+            }).catch(() => {});
+        });
+        audioUnlocked = true;
     }
 
     function playSound(name) {
@@ -47,9 +61,13 @@
             const sound = SOUNDS[name];
             if (sound) {
                 sound.currentTime = 0;
-                sound.play().catch(() => {});
+                sound.play().catch(err => {
+                    console.log('Play failed:', err);
+                });
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log('Sound error:', e);
+        }
     }
 
     function playRandomSound(names) {
@@ -228,6 +246,7 @@
         }
 
         onTap() {
+            unlockAudio();
             if (this.sleeping) {
                 this.wake();
                 return;
@@ -379,15 +398,30 @@
     function init() {
         initAudio();
 
+        // 먼저 저장된 상태 로드
+        const savedState = loadState();
+
         const mainSpiki = new Spiki('main', true);
         mainSpiki.x = 50;
         mainSpiki.y = 50;
         spikis.push(mainSpiki);
         mainSpikiId = 'main';
 
+        // 저장된 스피키 수만큼 생성
+        if (savedState) {
+            const savedCount = savedState.spikiCount || 1;
+            for (let i = 1; i < savedCount; i++) {
+                const newSpiki = new Spiki('spiki_' + i, false);
+                newSpiki.x = 20 + Math.random() * 60;
+                newSpiki.y = 35 + Math.random() * 30;
+                spikis.push(newSpiki);
+            }
+        }
+
         bindEvents();
         updateUI();
-        loadState();
+        updateSpikiCount();
+        checkMood();
 
         setTimeout(() => {
             showSpeech(pick(['안녕하세요!', '함께 놀아요~', '반가워요!']));
@@ -498,6 +532,7 @@
 
     // 증식
     function multiply() {
+        unlockAudio();
         if (state.sleeping || state.animating) return;
 
         if (state.stats.energy < 30 || state.stats.hunger < 30) {
@@ -541,6 +576,7 @@
 
     // 액션
     function feed() {
+        unlockAudio();
         if (state.sleeping || state.animating) return;
         state.animating = true;
 
@@ -568,6 +604,7 @@
     }
 
     function play() {
+        unlockAudio();
         if (state.sleeping || state.animating) return;
 
         if (state.stats.energy < 20) {
@@ -606,6 +643,7 @@
     }
 
     function pet() {
+        unlockAudio();
         if (state.sleeping || state.animating) return;
         state.animating = true;
 
@@ -633,6 +671,7 @@
     }
 
     function toggleSleep() {
+        unlockAudio();
         if (state.animating) return;
 
         if (state.sleeping) {
@@ -779,6 +818,7 @@
             spikis.push(newSpiki);
             showSpeech('새 친구가 왔어요!');
             updateSpikiCount();
+            saveState();
         }, 1000);
     }
 
@@ -853,22 +893,12 @@
                 state.level = data.level || 1;
                 state.exp = data.exp || 0;
                 state.expMax = data.expMax || 100;
-
-                const savedCount = data.spikiCount || 1;
-                for (let i = 1; i < savedCount && spikis.length < savedCount; i++) {
-                    const newSpiki = new Spiki('spiki_' + i, false);
-                    newSpiki.x = 20 + Math.random() * 60;
-                    newSpiki.y = 35 + Math.random() * 30;
-                    spikis.push(newSpiki);
-                }
-
-                updateUI();
-                updateSpikiCount();
-                checkMood();
+                return data;
             }
         } catch (e) {
             console.log('Load failed:', e);
         }
+        return null;
     }
 
     // 유틸
