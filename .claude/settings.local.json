@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo view:*)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd web-based Spiki Tamagotchi game & GitHub Pages\n\n- Create standalone web version of Spiki Tamagotchi\n- Add interactive tamagotchi game with all features:\n  - Feed, play, pet, sleep interactions\n  - Multiple Spikis with wandering AI\n  - Drag & drop mechanics with stretch effect\n  - Level up system with auto-multiply\n  - YouTube music player with Shorts support\n  - LocalStorage save/load system\n- Set up GitHub Pages deployment with Actions\n- Add landing page with game and extension links\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git config:*)",
+      "Bash(git push)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
