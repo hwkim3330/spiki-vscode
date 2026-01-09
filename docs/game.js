@@ -27,7 +27,23 @@
 
     // Web Audio API로 개선된 오디오 시스템
     const SOUNDS = {};
-    const SOUND_FILES = ['happy', 'happy2', 'tap', 'spiki', 'sad', 'surprise', 'dont', 'drag', 'play', 'tired'];
+    const SOUND_FILES = [
+        'happy',      // 좋아요!
+        'happy2',     // 좋아요 좋아요
+        'tap',        // 에
+        'spiki',      // 스피키
+        'sad',        // 으앙
+        'surprise',   // 으앙 (duplicate, will keep)
+        'dont',       // 네르지 마세요
+        'drag',       // 머리 잡아 당기지 마세요
+        'play',       // 숨바꼭질 좋아요
+        'tired',      // 열심히 했는데
+        'mop',        // 물걸레질
+        'pumpkin',    // 호박이 좋아요
+        'hideseek',   // 숨바꼭질 좋아요 (longer version)
+        'worked',     // 열심히 했는데 (longer version)
+        'cry'         // 으앙 (crying)
+    ];
     let soundEnabled = true;
     let audioUnlocked = false;
     let audioContext = null;
@@ -37,26 +53,52 @@
         try {
             // Web Audio API 초기화
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log('AudioContext created:', audioContext.state);
+
+            // 현재 경로 확인 (GitHub Pages 대응)
+            const basePath = window.location.pathname.includes('/game.html')
+                ? window.location.pathname.replace('/game.html', '/')
+                : window.location.pathname.endsWith('/')
+                    ? window.location.pathname
+                    : window.location.pathname + '/';
+
+            console.log('Base path for audio:', basePath);
 
             // HTML Audio 요소도 생성 (fallback용)
             SOUND_FILES.forEach(name => {
-                const audio = new Audio(`${name}.wav`);
+                const audioPath = `${name}.wav`;
+                const audio = new Audio(audioPath);
                 audio.volume = 0.4;
                 audio.preload = 'auto';
+                audio.crossOrigin = 'anonymous'; // CORS 대응
                 SOUNDS[name] = audio;
 
+                // 로드 성공 확인
+                audio.addEventListener('canplaythrough', () => {
+                    console.log(`✓ Audio ready: ${name}.wav`);
+                }, { once: true });
+
+                audio.addEventListener('error', (e) => {
+                    console.error(`✗ Audio failed: ${name}.wav`, e);
+                }, { once: true });
+
                 // Web Audio API용 버퍼 로드 시도
-                fetch(`${name}.wav`)
-                    .then(res => res.arrayBuffer())
+                fetch(audioPath, { mode: 'cors' })
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res.arrayBuffer();
+                    })
                     .then(buffer => audioContext.decodeAudioData(buffer))
                     .then(decoded => {
                         audioBuffers[name] = decoded;
-                        console.log(`Loaded: ${name}.wav`);
+                        console.log(`✓ Web Audio loaded: ${name}.wav`);
                     })
-                    .catch(e => console.log(`Failed to load ${name}.wav:`, e));
+                    .catch(e => console.log(`✗ Web Audio failed: ${name}.wav -`, e.message));
             });
+
+            console.log(`Initialized ${SOUND_FILES.length} audio files`);
         } catch (e) {
-            console.log('Audio init failed:', e);
+            console.error('Audio init failed:', e);
         }
     }
 
@@ -668,7 +710,8 @@
         const main = getMainSpiki();
         main?.setExpression('happy');
         showSpeech(pick(['음악이다!', '신나요~', '좋아요!']));
-        playRandomSound(['happy', 'happy2']);
+        // mop = 물걸레질 (신나는 소리)
+        playRandomSound(['happy', 'happy2', 'mop']);
 
         spikis.forEach(s => {
             if (!s.sleeping) s.element?.classList.add('dancing');
@@ -742,7 +785,8 @@
         main?.bounce();
         showSpeech(pick(SPEECH.feed));
         spawnEffects(['🍰', '🍩', '🍪'], 4);
-        playRandomSound(['happy', 'happy2']);
+        // 더 다양한 음성 사용 (pumpkin = 호박이 좋아요)
+        playRandomSound(['happy', 'happy2', 'pumpkin']);
 
         spikis.forEach(s => {
             if (!s.isMain) {
@@ -778,7 +822,8 @@
         main?.jump();
         showSpeech(pick(SPEECH.play));
         spawnEffects(['⭐', '🌟', '✨'], 6);
-        playRandomSound(['play', 'happy', 'happy2']);
+        // hideseek = 숨바꼭질 좋아요
+        playRandomSound(['play', 'hideseek', 'happy', 'happy2']);
 
         spikis.forEach(s => {
             if (!s.isMain) {
@@ -882,6 +927,8 @@
                 if (miniSpiki) {
                     showSpeech(`${miniSpiki.name}이(가) 떠났어요... 😢`);
                     showNotification('스피키가 떠났어요 😢', `${miniSpiki.name}이(가) 떠났어요. 행복도를 올려주세요!`);
+                    // 슬픈 음성 재생
+                    playRandomSound(['cry', 'sad']);
                     miniSpiki.remove();
                     spikis = spikis.filter(s => s.id !== miniSpiki.id);
                     updateSpikiCount();
@@ -917,10 +964,18 @@
 
         if (energy < 20) {
             main?.setExpression('sleepy');
-            if (Math.random() < 0.1) showSpeech(pick(SPEECH.tired));
+            if (Math.random() < 0.1) {
+                showSpeech(pick(SPEECH.tired));
+                // worked = 열심히 했는데
+                playRandomSound(['tired', 'worked']);
+            }
         } else if (hunger < 30 || happiness < 30) {
             main?.setExpression('worried');
-            if (Math.random() < 0.1) showSpeech(pick(SPEECH.hungry));
+            if (Math.random() < 0.1) {
+                showSpeech(pick(SPEECH.hungry));
+                // cry = 으앙 (울음소리)
+                playRandomSound(['sad', 'cry']);
+            }
         } else if (happiness > 70) {
             main?.setExpression('happy');
         } else {
