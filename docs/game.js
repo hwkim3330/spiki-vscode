@@ -1142,6 +1142,334 @@
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    // ====== 새로운 기능들 ======
+
+    // Particles.js 초기화
+    function initParticles() {
+        if (typeof particlesJS !== 'undefined') {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 50, density: { enable: true, value_area: 800 } },
+                    color: { value: ['#ff6b9d', '#ffa94d', '#69db7c', '#845ef7'] },
+                    shape: { type: 'circle' },
+                    opacity: { value: 0.3, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: { enable: false },
+                    move: {
+                        enable: true,
+                        speed: 1,
+                        direction: 'none',
+                        random: true,
+                        out_mode: 'out'
+                    }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: {
+                        onhover: { enable: true, mode: 'bubble' },
+                        onclick: { enable: true, mode: 'push' }
+                    },
+                    modes: {
+                        bubble: { distance: 100, size: 6, duration: 2 },
+                        push: { particles_nb: 4 }
+                    }
+                }
+            });
+        }
+    }
+
+    // Hammer.js - Touch Gestures
+    function initGestures() {
+        if (typeof Hammer === 'undefined') return;
+
+        spikis.forEach(spiki => {
+            if (!spiki.element) return;
+
+            const hammer = new Hammer(spiki.element);
+
+            // Double Tap
+            hammer.on('doubletap', () => {
+                spiki.jump();
+                spiki.setExpression('happy');
+                showSpeechAt(pick(['야호!', '와!', '신나요!']), spiki.x, spiki.y - 15);
+                playRandomSound(['happy', 'happy2']);
+                addExp(5);
+            });
+
+            // Press (Long Press)
+            hammer.on('press', () => {
+                spiki.setExpression('surprised');
+                showSpeechAt(pick(['왜요?', '뭐예요?', '??']), spiki.x, spiki.y - 15);
+                playSound('surprise');
+            });
+
+            // Swipe
+            hammer.on('swipe', (ev) => {
+                const direction = ev.direction;
+                if (direction === Hammer.DIRECTION_LEFT || direction === Hammer.DIRECTION_RIGHT) {
+                    spiki.targetX = direction === Hammer.DIRECTION_LEFT ? 20 : 80;
+                    spiki.speed = 3;
+                    showSpeechAt('슝!', spiki.x, spiki.y - 15);
+                    setTimeout(() => spiki.speed = 0.5, 500);
+                }
+            });
+
+            // Pinch (Zoom)
+            hammer.get('pinch').set({ enable: true });
+            hammer.on('pinch', (ev) => {
+                const scale = Math.max(0.5, Math.min(2, ev.scale));
+                spiki.size = scale;
+                spiki.element.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            });
+        });
+    }
+
+    // Speech Recognition API - 음성 명령
+    let recognition = null;
+    function initVoiceControl() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            console.log('Speech Recognition not supported');
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'ko-KR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+            const command = event.results[0][0].transcript.toLowerCase();
+            console.log('음성 명령:', command);
+
+            if (command.includes('밥') || command.includes('먹')) {
+                feed();
+                showSpeech('밥 먹을게요!');
+            } else if (command.includes('놀') || command.includes('재미')) {
+                play();
+                showSpeech('놀아요!');
+            } else if (command.includes('자')) {
+                toggleSleep();
+                showSpeech('잘 자요~');
+            } else if (command.includes('증식')) {
+                multiply();
+            } else if (command.includes('음악')) {
+                toggleYouTubePanel();
+            } else {
+                showSpeech('잘 못 들었어요 😅');
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.log('Speech recognition error:', event.error);
+        };
+    }
+
+    function startVoiceCommand() {
+        if (!recognition) {
+            initVoiceControl();
+        }
+        if (recognition) {
+            try {
+                recognition.start();
+                showSpeech('무엇을 할까요? 🎤');
+            } catch (e) {
+                console.log('Voice recognition error:', e);
+            }
+        }
+    }
+
+    // DeviceOrientation API - 흔들기 감지
+    let lastShake = 0;
+    function initShakeDetection() {
+        if (!window.DeviceMotionEvent) {
+            console.log('Device Motion not supported');
+            return;
+        }
+
+        window.addEventListener('devicemotion', (event) => {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            const magnitude = Math.sqrt(
+                acc.x * acc.x +
+                acc.y * acc.y +
+                acc.z * acc.z
+            );
+
+            if (magnitude > 25 && Date.now() - lastShake > 1000) {
+                lastShake = Date.now();
+                onShake();
+            }
+        });
+    }
+
+    function onShake() {
+        console.log('Device shaken!');
+        spikis.forEach(s => {
+            s.wiggle();
+            s.setExpression('surprised');
+        });
+        showSpeech(pick(['우와!', '깜짝이야!', '어지러워!']));
+        playSound('surprise');
+        spawnEffects(['✨', '💫', '⭐'], 8);
+    }
+
+    function simulateShake() {
+        onShake();
+    }
+
+    // Screen Capture API - 사진 찍기
+    async function takePhoto() {
+        try {
+            const canvas = document.createElement('canvas');
+            const area = characterArea;
+            const rect = area.getBoundingClientRect();
+
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = window.getComputedStyle(area).background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Capture each Spiki
+            for (const spiki of spikis) {
+                if (!spiki.element) continue;
+                const img = spiki.element.querySelector('img');
+                if (!img) continue;
+
+                const x = (spiki.x / 100) * canvas.width;
+                const y = (spiki.y / 100) * canvas.height;
+
+                ctx.drawImage(img, x - 50, y - 50, 100, 100);
+            }
+
+            // Download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `spiki-${Date.now()}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showSpeech('📸 사진 저장!');
+                playSound('happy');
+            });
+        } catch (e) {
+            console.error('Photo capture failed:', e);
+            showSpeech('사진 촬영 실패 😢');
+        }
+    }
+
+    // Settings Panel
+    function toggleSettings() {
+        const panel = document.getElementById('settings-panel');
+        if (panel) {
+            if (panel.style.display === 'none' || !panel.style.display) {
+                panel.style.display = 'block';
+                panel.classList.add('show');
+            } else {
+                panel.classList.remove('show');
+                setTimeout(() => panel.style.display = 'none', 300);
+            }
+        }
+    }
+
+    function resetGame() {
+        if (confirm('정말 게임을 초기화하시겠습니까? 모든 진행 상황이 삭제됩니다.')) {
+            localStorage.removeItem('spiki-state');
+            location.reload();
+        }
+    }
+
+    // YouTube Panel Controls Enhancement
+    function stopYouTube() {
+        const container = document.getElementById('youtube-container');
+        if (container) container.innerHTML = '';
+        isYoutubePlaying = false;
+        document.getElementById('music-btn')?.classList.remove('playing');
+        spikis.forEach(s => s.element?.classList.remove('dancing'));
+        showSpeech('음악 정지!');
+    }
+
+    // Settings Toggles
+    function bindSettingsEvents() {
+        document.getElementById('sound-toggle')?.addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+            localStorage.setItem('spiki-sound', soundEnabled);
+        });
+
+        document.getElementById('vibration-toggle')?.addEventListener('change', (e) => {
+            localStorage.setItem('spiki-vibration', e.target.checked);
+        });
+
+        document.getElementById('notification-toggle')?.addEventListener('change', (e) => {
+            notificationsEnabled = e.target.checked;
+            localStorage.setItem('spiki-notifications', e.target.checked);
+        });
+
+        document.getElementById('auto-multiply-toggle')?.addEventListener('change', (e) => {
+            state.autoMultiply = e.target.checked;
+            localStorage.setItem('spiki-auto-multiply', e.target.checked);
+        });
+
+        document.getElementById('particles-toggle')?.addEventListener('change', (e) => {
+            const particlesEl = document.getElementById('particles-js');
+            if (particlesEl) {
+                particlesEl.style.display = e.target.checked ? 'block' : 'none';
+            }
+            localStorage.setItem('spiki-particles', e.target.checked);
+        });
+
+        document.getElementById('reset-game')?.addEventListener('click', resetGame);
+    }
+
+    // Extended Event Bindings
+    function bindAdvancedEvents() {
+        document.getElementById('voice-btn')?.addEventListener('click', startVoiceCommand);
+        document.getElementById('photo-btn')?.addEventListener('click', takePhoto);
+        document.getElementById('shake-btn')?.addEventListener('click', simulateShake);
+        document.getElementById('settings-btn')?.addEventListener('click', toggleSettings);
+        document.getElementById('close-settings')?.addEventListener('click', toggleSettings);
+        document.getElementById('stop-youtube')?.addEventListener('click', stopYouTube);
+
+        bindSettingsEvents();
+    }
+
+    // Initialize Advanced Features
+    function initAdvancedFeatures() {
+        initParticles();
+        initShakeDetection();
+        initVoiceControl();
+        bindAdvancedEvents();
+
+        // Initialize Hammer.js after Spikis are created
+        setTimeout(() => {
+            initGestures();
+        }, 1000);
+
+        // Load settings
+        const savedSound = localStorage.getItem('spiki-sound');
+        if (savedSound !== null) {
+            soundEnabled = savedSound === 'true';
+            const toggle = document.getElementById('sound-toggle');
+            if (toggle) toggle.checked = soundEnabled;
+        }
+
+        const savedParticles = localStorage.getItem('spiki-particles');
+        if (savedParticles === 'false') {
+            const particlesEl = document.getElementById('particles-js');
+            if (particlesEl) particlesEl.style.display = 'none';
+            const toggle = document.getElementById('particles-toggle');
+            if (toggle) toggle.checked = false;
+        }
+    }
+
     // 시작
     init();
+    initAdvancedFeatures();
 })();
