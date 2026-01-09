@@ -1,8 +1,14 @@
 # Spiki Tamagotchi
 
+[![VSCode Marketplace](https://img.shields.io/visual-studio-marketplace/v/hwkim3330.spiki-tamagotchi?style=for-the-badge&logo=visual-studio-code&logoColor=white&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=hwkim3330.spiki-tamagotchi)
+[![Install](https://img.shields.io/visual-studio-marketplace/i/hwkim3330.spiki-tamagotchi?style=for-the-badge&color=34C759)](https://marketplace.visualstudio.com/items?itemName=hwkim3330.spiki-tamagotchi)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/hwkim3330.spiki-tamagotchi?style=for-the-badge&color=FF9500)](https://marketplace.visualstudio.com/items?itemName=hwkim3330.spiki-tamagotchi)
+
 **귀여운 스피키와 함께 코딩하세요!**
 
 VSCode에서 키우는 귀여운 가상 펫 스피키입니다. 코딩하면 스피키가 행복해지고, 레벨업하면 친구들이 늘어나요!
+
+🎮 **[웹 게임 플레이하기](https://hwkim3330.github.io/spiki/game.html)** | 💻 **[VSCode 확장 설치하기](https://marketplace.visualstudio.com/items?itemName=hwkim3330.spiki-tamagotchi)**
 
 ![Spiki Preview](media/images/spiki1.png)
 
