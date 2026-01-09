@@ -599,6 +599,8 @@
         document.getElementById('play-btn')?.addEventListener('click', play);
         document.getElementById('pet-btn')?.addEventListener('click', pet);
         document.getElementById('sleep-btn')?.addEventListener('click', toggleSleep);
+        document.getElementById('pumpkin-btn')?.addEventListener('click', feedPumpkin);
+        document.getElementById('clean-btn')?.addEventListener('click', clean);
         document.getElementById('multiply-btn')?.addEventListener('click', multiply);
         document.getElementById('music-btn')?.addEventListener('click', toggleYouTubePanel);
         document.getElementById('close-youtube')?.addEventListener('click', closeYouTubePanel);
@@ -862,6 +864,80 @@
                 s.targetX = mainX + (Math.random() - 0.5) * 25;
                 s.targetY = mainY + (Math.random() - 0.5) * 15;
                 setTimeout(() => s.wiggle(), Math.random() * 500);
+            }
+        });
+
+        endAction();
+    }
+
+    function feedPumpkin() {
+        unlockAudio();
+        if (state.sleeping || state.animating) return;
+        state.animating = true;
+
+        // 호박은 특별한 간식 - 포만감과 행복도를 많이 올려줌
+        state.stats.hunger = Math.min(100, state.stats.hunger + 40);
+        state.stats.happiness = Math.min(100, state.stats.happiness + 20);
+        state.stats.energy = Math.min(100, state.stats.energy + 10);
+        addExp(25);
+
+        const main = getMainSpiki();
+        main?.setExpression('happy');
+        main?.jump();
+        showSpeech('호박이 최고예요! 🎃');
+        spawnEffects(['🎃', '🥧', '✨'], 6);
+        // pumpkin = 호박이 좋아요
+        playSound('pumpkin');
+
+        spikis.forEach(s => {
+            if (!s.isMain) {
+                setTimeout(() => {
+                    s.setExpression('happy');
+                    s.jump();
+                }, Math.random() * 500);
+            }
+        });
+
+        endAction();
+    }
+
+    function clean() {
+        unlockAudio();
+        if (state.sleeping || state.animating) return;
+        state.animating = true;
+
+        // 청소는 에너지를 조금 쓰지만 행복도와 경험치를 많이 올려줌
+        state.stats.happiness = Math.min(100, state.stats.happiness + 30);
+        state.stats.energy = Math.max(0, state.stats.energy - 10);
+        addExp(30);
+
+        const main = getMainSpiki();
+        main?.setExpression('happy');
+
+        // 청소 애니메이션 효과
+        const cleanBtn = document.getElementById('clean-btn');
+        cleanBtn?.classList.add('cleaning');
+        setTimeout(() => cleanBtn?.classList.remove('cleaning'), 1000);
+
+        showSpeech('깨끗해졌어요! 🧹✨');
+        spawnEffects(['🧹', '💧', '✨', '🌟'], 8);
+        // mop = 물걸레질, worked = 열심히 했는데
+        playRandomSound(['mop', 'worked', 'happy2']);
+
+        // 모든 스피키가 청소하는 것처럼 움직임
+        spikis.forEach(s => {
+            if (!s.isMain) {
+                const newX = 15 + Math.random() * 70;
+                const newY = 30 + Math.random() * 40;
+                s.targetX = newX;
+                s.targetY = newY;
+                s.speed = 2;
+                setTimeout(() => {
+                    s.wiggle();
+                    s.speed = 0.5 + Math.random() * 1;
+                }, Math.random() * 700);
+            } else {
+                s.wiggle();
             }
         });
 
@@ -1245,6 +1321,12 @@
             if (command.includes('밥') || command.includes('먹')) {
                 feed();
                 showSpeech('밥 먹을게요!');
+            } else if (command.includes('호박')) {
+                feedPumpkin();
+                showSpeech('호박이 좋아요! 🎃');
+            } else if (command.includes('청소') || command.includes('깨끗')) {
+                clean();
+                showSpeech('청소할게요! 🧹');
             } else if (command.includes('놀') || command.includes('재미')) {
                 play();
                 showSpeech('놀아요!');

@@ -492,6 +492,32 @@ body {
     animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
+.pumpkin-btn {
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.2), rgba(255, 204, 0, 0.2));
+}
+
+.pumpkin-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.3), rgba(255, 204, 0, 0.3));
+}
+
+.clean-btn {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.2), rgba(48, 209, 88, 0.2));
+}
+
+.clean-btn:hover {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.3), rgba(48, 209, 88, 0.3));
+}
+
+.clean-btn.cleaning {
+    animation: cleaning-sweep 1s ease-in-out;
+}
+
+@keyframes cleaning-sweep {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
 @keyframes pulse-glow {
     0%, 100% {
         box-shadow: 0 2px 12px rgba(0, 122, 255, 0.3);
