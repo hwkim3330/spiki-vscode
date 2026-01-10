@@ -1,8 +1,8 @@
 {
   "name": "spiki-tamagotchi",
-  "displayName": "Spiki Tamagotchi",
+  "displayName": "스피키 다마고치 펫",
   "description": "귀여운 스피키와 함께 코딩하세요! 코딩할수록 스피키가 행복해져요. Cute coding companion that grows with you!",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "kimhyunwoo",
   "author": {
     "name": "Kim Hyunwoo"
