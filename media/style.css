@@ -1,4 +1,7 @@
 /* Spiki VSCode Extension Styles */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap');
+
 :root {
     --bg-primary: var(--vscode-editor-background);
     --bg-secondary: var(--vscode-sideBar-background);
@@ -9,6 +12,9 @@
     --button-bg: var(--vscode-button-background);
     --button-fg: var(--vscode-button-foreground);
     --button-hover: var(--vscode-button-hoverBackground);
+
+    --font-cute: 'Gamja Flower', cursive;
+    --font-ui: 'Nunito', var(--vscode-font-family);
 }
 
 * {
@@ -18,7 +24,7 @@
 }
 
 body {
-    font-family: var(--vscode-font-family);
+    font-family: var(--font-ui);
     font-size: var(--vscode-font-size);
     color: var(--text-primary);
     background: var(--bg-primary);
@@ -202,15 +208,17 @@ body {
     transform: translateX(-50%) translateY(10px) scale(0.9);
     background: var(--vscode-notifications-background, rgba(50, 50, 60, 0.95));
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 8px 14px;
-    font-size: 12px;
+    border-radius: 16px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-family: var(--font-cute);
     opacity: 0;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
     z-index: 100;
     max-width: 90%;
     text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .speech-bubble::after {
@@ -356,32 +364,35 @@ body {
 .actions {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    padding: 6px 0;
+    gap: 10px;
+    padding: 8px 0;
 }
 
 .action-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--vscode-button-secondaryBackground, rgba(255,255,255,0.1));
     color: var(--text-primary);
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .action-btn:hover {
     background: var(--vscode-button-secondaryHoverBackground, rgba(255,255,255,0.15));
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .action-btn:active {
-    transform: translateY(0) scale(0.95);
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .action-btn.multiply-btn {
@@ -407,6 +418,32 @@ body {
 @keyframes pulse-music {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
+}
+
+.action-btn.pumpkin-btn {
+    background: linear-gradient(135deg, #ffa94d, #ffd43b);
+}
+
+.action-btn.pumpkin-btn:hover {
+    background: linear-gradient(135deg, #ffb366, #ffe066);
+}
+
+.action-btn.clean-btn {
+    background: linear-gradient(135deg, #51cf66, #69db7c);
+}
+
+.action-btn.clean-btn:hover {
+    background: linear-gradient(135deg, #69db7c, #8ce99a);
+}
+
+.action-btn.clean-btn.cleaning {
+    animation: cleaning-sweep 1s ease-in-out;
+}
+
+@keyframes cleaning-sweep {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
 }
 
 /* YouTube Panel */

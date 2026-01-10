@@ -127,6 +127,11 @@ export class SpikiViewProvider implements vscode.WebviewViewProvider {
             <button class="action-btn" id="play-btn" title="놀아주기">🎮</button>
             <button class="action-btn" id="pet-btn" title="쓰다듬기">💕</button>
             <button class="action-btn" id="sleep-btn" title="재우기">💤</button>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn pumpkin-btn" id="pumpkin-btn" title="호박 먹이기">🎃</button>
+            <button class="action-btn clean-btn" id="clean-btn" title="청소하기">🧹</button>
             <button class="action-btn multiply-btn" id="multiply-btn" title="증식!">🥚</button>
             <button class="action-btn music-btn" id="music-btn" title="음악">🎵</button>
         </div>

@@ -35,7 +35,11 @@
 
     // 오디오
     const SOUNDS = {};
-    const SOUND_FILES = ['happy', 'happy2', 'tap', 'spiki', 'sad', 'surprise', 'dont', 'drag', 'play', 'tired'];
+    const SOUND_FILES = [
+        'happy', 'happy2', 'tap', 'spiki', 'sad', 'surprise',
+        'dont', 'drag', 'play', 'tired',
+        'mop', 'pumpkin', 'hideseek', 'worked', 'cry'
+    ];
     let soundEnabled = true;
 
     function initAudio() {
@@ -452,6 +456,8 @@
         document.getElementById('play-btn')?.addEventListener('click', () => play());
         document.getElementById('pet-btn')?.addEventListener('click', () => pet());
         document.getElementById('sleep-btn')?.addEventListener('click', () => toggleSleep());
+        document.getElementById('pumpkin-btn')?.addEventListener('click', () => feedPumpkin());
+        document.getElementById('clean-btn')?.addEventListener('click', () => clean());
         document.getElementById('multiply-btn')?.addEventListener('click', () => multiply());
         document.getElementById('music-btn')?.addEventListener('click', () => toggleYouTubePanel());
         document.getElementById('close-youtube')?.addEventListener('click', () => closeYouTubePanel());
@@ -693,6 +699,72 @@
                 s.targetX = mainX + (Math.random() - 0.5) * 25;
                 s.targetY = mainY + (Math.random() - 0.5) * 15;
                 setTimeout(() => s.wiggle(), Math.random() * 500);
+            }
+        });
+
+        endAction();
+    }
+
+    function feedPumpkin() {
+        if (state.sleeping || state.animating) return;
+        state.animating = true;
+
+        state.stats.hunger = Math.min(100, state.stats.hunger + 40);
+        state.stats.happiness = Math.min(100, state.stats.happiness + 20);
+        state.stats.energy = Math.min(100, state.stats.energy + 10);
+        addExp(25);
+
+        const main = getMainSpiki();
+        main?.setExpression('happy');
+        main?.jump();
+        showSpeech('호박이 최고예요! 🎃');
+        spawnEffects(['🎃', '🥧', '✨'], 6);
+        playSound('pumpkin');
+
+        spikis.forEach(s => {
+            if (!s.isMain) {
+                setTimeout(() => {
+                    s.setExpression('happy');
+                    s.jump();
+                }, Math.random() * 500);
+            }
+        });
+
+        endAction();
+    }
+
+    function clean() {
+        if (state.sleeping || state.animating) return;
+        state.animating = true;
+
+        state.stats.happiness = Math.min(100, state.stats.happiness + 30);
+        state.stats.energy = Math.max(0, state.stats.energy - 10);
+        addExp(30);
+
+        const main = getMainSpiki();
+        main?.setExpression('happy');
+
+        const cleanBtn = document.getElementById('clean-btn');
+        cleanBtn?.classList.add('cleaning');
+        setTimeout(() => cleanBtn?.classList.remove('cleaning'), 1000);
+
+        showSpeech('깨끗해졌어요! 🧹✨');
+        spawnEffects(['🧹', '💧', '✨', '🌟'], 8);
+        playRandomSound(['mop', 'worked', 'happy2']);
+
+        spikis.forEach(s => {
+            if (!s.isMain) {
+                const newX = 15 + Math.random() * 70;
+                const newY = 30 + Math.random() * 40;
+                s.targetX = newX;
+                s.targetY = newY;
+                s.speed = 2;
+                setTimeout(() => {
+                    s.wiggle();
+                    s.speed = 0.5 + Math.random() * 1;
+                }, Math.random() * 700);
+            } else {
+                s.wiggle();
             }
         });
 
