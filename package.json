@@ -2,7 +2,7 @@
   "name": "spiki",
   "displayName": "Spiki Code Buddy",
   "description": "귀여운 스피키와 함께 코딩하세요! 코딩할수록 스피키가 행복해져요. Cute coding companion that grows with you!",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "hwkim3330",
   "author": {
     "name": "Kim Hyunwoo"
@@ -67,6 +67,11 @@
         "command": "spiki.addEditorSpiki",
         "title": "Spiki: Add Spiki to Editor",
         "icon": "$(add)"
+      },
+      {
+        "command": "spiki.showStats",
+        "title": "Spiki: Show Coding Stats",
+        "icon": "$(graph)"
       }
     ],
     "viewsContainers": {

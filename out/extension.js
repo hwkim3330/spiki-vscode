@@ -41,6 +41,21 @@ let spikiProvider;
 let statusBarItem;
 let typingTimer;
 let saveCount = 0;
+let codingStats = {
+    sessionStart: Date.now(),
+    totalLines: 0,
+    totalSaves: 0,
+    totalErrors: 0,
+    totalCommits: 0,
+    streak: 0,
+    lastCodingDate: '',
+    todayLines: 0,
+    todaySaves: 0,
+};
+// 휴식 알림
+let lastBreakReminder = Date.now();
+let continuousCodingMinutes = 0;
+let breakReminderTimer;
 let editorSpikis = [];
 let editorSpikiTimer;
 let editorSpikiEnabled = true;
@@ -48,6 +63,9 @@ let extensionContext;
 function activate(context) {
     console.log('Spiki is waking up! 🐾');
     extensionContext = context;
+    // 저장된 통계 로드
+    loadCodingStats(context);
+    updateStreak();
     // Webview Provider 등록
     spikiProvider = new SpikiViewProvider_1.SpikiViewProvider(context.extensionUri, context);
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('spiki.panel', spikiProvider));
@@ -81,6 +99,8 @@ function activate(context) {
             addEditorSpiki();
             vscode.window.showInformationMessage('🐾 에디터에 스피키 추가!');
         }
+    }), vscode.commands.registerCommand('spiki.showStats', () => {
+        showCodingStats();
     }));
     // 코딩 활동 감지
     const config = vscode.workspace.getConfiguration('spiki');
@@ -88,6 +108,20 @@ function activate(context) {
     vscode.workspace.onDidChangeTextDocument((e) => {
         if (e.contentChanges.length > 0 && config.get('autoFeed')) {
             handleTyping();
+            // 라인 수 통계
+            const addedLines = e.contentChanges.reduce((sum, change) => {
+                return sum + (change.text.match(/\n/g) || []).length;
+            }, 0);
+            if (addedLines > 0) {
+                codingStats.totalLines += addedLines;
+                codingStats.todayLines += addedLines;
+                // 100줄마다 칭찬
+                if (codingStats.todayLines % 100 === 0) {
+                    const msg = `🎉 오늘 ${codingStats.todayLines}줄 작성! 스피키가 기뻐해요!`;
+                    vscode.window.showInformationMessage(msg);
+                    spikiProvider.sendMessage({ type: 'speech', text: '대단해요! 열심히 하고 있네요!' });
+                }
+            }
             // 타이핑하면 스피키들 반응
             if (editorSpikiEnabled && Math.random() < 0.15) {
                 moveAllEditorSpikis();
@@ -96,6 +130,9 @@ function activate(context) {
     });
     // 파일 저장 감지
     vscode.workspace.onDidSaveTextDocument(() => {
+        codingStats.totalSaves++;
+        codingStats.todaySaves++;
+        saveCodingStats(context);
         if (config.get('autoFeed')) {
             saveCount++;
             if (saveCount >= 3) {
@@ -107,19 +144,71 @@ function activate(context) {
                 }
             }
         }
+        // 10번 저장마다 격려
+        if (codingStats.todaySaves % 10 === 0) {
+            spikiProvider.sendMessage({ type: 'speech', text: '저장 완료! 꾸준히 하고 있네요~' });
+        }
+    });
+    // 에러 감지 (진단 변경)
+    vscode.languages.onDidChangeDiagnostics((e) => {
+        e.uris.forEach(uri => {
+            const diagnostics = vscode.languages.getDiagnostics(uri);
+            const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error);
+            if (errors.length > 0 && Math.random() < 0.3) {
+                codingStats.totalErrors++;
+                const encouragements = [
+                    '괜찮아요, 버그는 성장의 기회예요!',
+                    '에러 발견! 같이 해결해봐요~',
+                    '실수는 누구나 해요, 힘내세요!',
+                    '디버깅 타임! 할 수 있어요!',
+                ];
+                const msg = encouragements[Math.floor(Math.random() * encouragements.length)];
+                spikiProvider.sendMessage({ type: 'speech', text: msg });
+            }
+        });
     });
     // 디버그 시작 감지
     vscode.debug.onDidStartDebugSession(() => {
         spikiProvider.sendMessage({ type: 'reward', reason: 'debug', amount: 10 });
+        spikiProvider.sendMessage({ type: 'speech', text: '디버깅 시작! 버그를 잡아봐요!' });
         // 디버그하면 스피키들 놀람
         if (editorSpikiEnabled) {
             moveAllEditorSpikis();
         }
     });
+    // 디버그 종료 감지
+    vscode.debug.onDidTerminateDebugSession(() => {
+        spikiProvider.sendMessage({ type: 'speech', text: '디버깅 끝! 수고했어요~' });
+    });
     // 터미널 명령 실행 감지
     vscode.window.onDidOpenTerminal(() => {
         spikiProvider.sendMessage({ type: 'event', event: 'terminal' });
     });
+    // Git 커밋 감지 (소스 컨트롤 변경)
+    vscode.workspace.onDidChangeTextDocument((e) => {
+        if (e.document.uri.scheme === 'git') {
+            codingStats.totalCommits++;
+            spikiProvider.sendMessage({ type: 'speech', text: '커밋 완료! 잘하고 있어요!' });
+            spikiProvider.sendMessage({ type: 'reward', reason: 'commit', amount: 15 });
+        }
+    });
+    // 휴식 알림 타이머
+    breakReminderTimer = setInterval(() => {
+        continuousCodingMinutes++;
+        // 50분마다 휴식 알림
+        if (continuousCodingMinutes >= 50) {
+            const breakMessages = [
+                '🧘 50분 코딩했어요! 잠깐 스트레칭 어때요?',
+                '☕ 열심히 했네요! 물 한 잔 마시고 와요~',
+                '👀 눈이 피곤하지 않아요? 잠깐 쉬어가요!',
+                '🚶 잠깐 걸으면서 환기해요!',
+            ];
+            const msg = breakMessages[Math.floor(Math.random() * breakMessages.length)];
+            vscode.window.showInformationMessage(msg);
+            spikiProvider.sendMessage({ type: 'speech', text: '쉬엄쉬엄 해요~' });
+            continuousCodingMinutes = 0;
+        }
+    }, 60000); // 1분마다 체크
     // 에디터 변경 감지
     vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && editorSpikiEnabled) {
@@ -280,6 +369,67 @@ function updateStatusBar(state) {
 }
 function deactivate() {
     stopEditorSpikis();
+    if (breakReminderTimer) {
+        clearInterval(breakReminderTimer);
+    }
+    saveCodingStats(extensionContext);
     console.log('Spiki is sleeping... 💤');
+}
+// 통계 관련 함수들
+function loadCodingStats(context) {
+    const saved = context.globalState.get('codingStats');
+    if (saved) {
+        codingStats = { ...codingStats, ...saved };
+    }
+    // 오늘 날짜 확인해서 일일 통계 리셋
+    const today = new Date().toDateString();
+    if (codingStats.lastCodingDate !== today) {
+        codingStats.todayLines = 0;
+        codingStats.todaySaves = 0;
+        codingStats.lastCodingDate = today;
+    }
+    codingStats.sessionStart = Date.now();
+}
+function saveCodingStats(context) {
+    codingStats.lastCodingDate = new Date().toDateString();
+    context.globalState.update('codingStats', codingStats);
+}
+function updateStreak() {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (codingStats.lastCodingDate === yesterday) {
+        codingStats.streak++;
+    }
+    else if (codingStats.lastCodingDate !== today) {
+        codingStats.streak = 1;
+    }
+    // 스트릭 축하
+    if (codingStats.streak > 1 && codingStats.lastCodingDate !== today) {
+        setTimeout(() => {
+            vscode.window.showInformationMessage(`🔥 ${codingStats.streak}일 연속 코딩 중! 대단해요!`);
+            spikiProvider.sendMessage({ type: 'speech', text: `${codingStats.streak}일 연속! 최고예요!` });
+        }, 3000);
+    }
+}
+function showCodingStats() {
+    const sessionMinutes = Math.floor((Date.now() - codingStats.sessionStart) / 60000);
+    const sessionHours = Math.floor(sessionMinutes / 60);
+    const sessionMins = sessionMinutes % 60;
+    const message = `📊 Spiki 코딩 통계
+
+🔥 연속 코딩: ${codingStats.streak}일
+
+📝 오늘:
+   • 작성한 줄: ${codingStats.todayLines}줄
+   • 저장 횟수: ${codingStats.todaySaves}회
+   • 이번 세션: ${sessionHours}시간 ${sessionMins}분
+
+📈 전체:
+   • 총 작성 줄: ${codingStats.totalLines}줄
+   • 총 저장 횟수: ${codingStats.totalSaves}회
+   • 발견한 에러: ${codingStats.totalErrors}개
+
+스피키와 함께 화이팅! 💪`;
+    vscode.window.showInformationMessage(message, { modal: true });
 }
 //# sourceMappingURL=extension.js.map
